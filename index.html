@@ -5,15 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background: #f0f2f5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-    .box { background: white; padding: 30px 20px; width: 90%; max-width: 400px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; min-height: 420px; }
-    .question { font-size: 32px; font-weight: bold; margin: 20px 0; color: #333; min-height: 50px; display: flex; align-items: center; justify-content: center; }
-    input { font-size: 22px; padding: 12px; width: 85%; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 15px; outline: none; text-align: center; }
+    .box { background: white; padding: 30px 20px; width: 90%; max-width: 400px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; min-height: 450px; }
+    .question { font-size: 32px; font-weight: bold; margin: 20px 0; color: #333; min-height: 50px; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+    .word-hint { font-size: 24px; letter-spacing: 8px; color: #555; margin-bottom: 10px; font-family: monospace; }
+    input { font-size: 22px; padding: 12px; width: 85%; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 15px; outline: none; text-align: center; text-transform: lowercase; }
     input:focus { border-color: #4CAF50; }
     button { font-size: 16px; padding: 12px 24px; background-color: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; margin: 5px; font-weight: bold; }
-    #speakBtn { background-color: #2196F3; font-size: 28px; padding: 15px 50px; border-radius: 50px; box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3); }
+    #speakBtn { background-color: #2196F3; font-size: 28px; padding: 15px 50px; border-radius: 50px; }
     #modeBtn { background-color: #9c27b0; margin-bottom: 15px; font-size: 12px; padding: 8px 15px; }
-    #message { margin-top: 15px; font-weight: bold; min-height: 48px; line-height: 1.4; font-size: 18px; }
-    #score { color: #555; font-size: 14px; background: #eee; padding: 8px 15px; border-radius: 20px; display: inline-block; margin-top: 10px; font-weight: 600; }
+    #message { margin-top: 10px; font-weight: bold; min-height: 48px; line-height: 1.4; font-size: 18px; }
+    #score { color: #555; font-size: 13px; background: #eee; padding: 8px 15px; border-radius: 20px; display: inline-block; margin-top: 10px; font-weight: 600; line-height: 1.5; }
     #resetBtn { position: absolute; bottom: 10px; left: 10px; font-size: 10px; padding: 5px 8px; background: #f0f0f0; color: #aaa; border: 1px solid #ddd; border-radius: 4px; }
   </style>
 </head>
@@ -28,8 +29,10 @@
   </div>
 
   <div id="spellingArea" style="display:none;">
-    <p style="color:#666; margin-bottom:10px;">Click to hear the word:</p>
-    <button id="speakBtn" onclick="sayWord()">🔊</button>
+    <div class="question">
+        <div class="word-hint" id="wordHint">_ _ _ _ _</div>
+        <button id="speakBtn" onclick="sayWord()">🔊</button>
+    </div>
   </div>
 
   <br>
@@ -45,45 +48,40 @@
 </div>
 
 <script>
-// --- GOOGLE SHEETS CONFIG ---
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6laLcpDJNQ4Lo99PY6WixZYa-I7DQJjskjc1teW22s2YQtcLBRmKPs6g94xQ7Du9FxuXGFYksIwst/pub?gid=0&single=true&output=csv';
 
 let mode = "math"; 
 let num1, num2, operator, correctAnswer, currentQuestionText;
-let spellingWords = ["loading"]; 
+let spellingWords = ["apple"]; 
 let currentWord = "";
 let attempts = 0;
 let penaltyApplied = false;
 
+// State
 let score = parseFloat(localStorage.getItem("balance")) || 0;
-let dailyEarned = parseFloat(localStorage.getItem("dailyEarned")) || 0;
+let dailyMathDone = parseInt(localStorage.getItem("mathToday")) || 0;
+let dailySpellDone = parseInt(localStorage.getItem("spellToday")) || 0;
 let errorLog = JSON.parse(localStorage.getItem("errorLog")) || [];
 let today = new Date().toDateString();
 
-// Date Check for Daily Reset
 if (localStorage.getItem("date") !== today) {
-  dailyEarned = 0;
-  localStorage.setItem("dailyEarned", 0);
+  dailyMathDone = 0;
+  dailySpellDone = 0;
   localStorage.setItem("date", today);
 }
 
-// Load Words from Google Sheets
-fetch(CSV_URL)
-  .then(res => res.text())
-  .then(data => {
-    // Split by line and clean up whitespace
-    spellingWords = data.split(/\r?\n/).map(w => w.trim()).filter(w => w.length > 0);
-    console.log("Sheet Loaded:", spellingWords);
-  })
-  .catch(err => {
-    console.error("Sheet Error:", err);
-    spellingWords = ["apple", "school", "friend"]; // Fallback
-  });
+fetch(CSV_URL).then(res => res.text()).then(data => {
+    spellingWords = data.split(/\r?\n/).map(w => w.trim()).filter(w => w.length > 1);
+});
 
 function updateScore() {
-  document.getElementById("score").innerText = `Balance: $${score.toFixed(2)} | Today: $${dailyEarned.toFixed(2)}`;
+  document.getElementById("score").innerHTML = 
+    `Balance: $${score.toFixed(2)}<br>` +
+    `Today's Rewards: Math (${dailyMathDone}/20) | Spelling (${dailySpellDone}/10)`;
+  
   localStorage.setItem("balance", score.toFixed(2));
-  localStorage.setItem("dailyEarned", dailyEarned.toFixed(2));
+  localStorage.setItem("mathToday", dailyMathDone);
+  localStorage.setItem("spellToday", dailySpellDone);
 }
 
 function toggleMode() {
@@ -100,7 +98,7 @@ function nextTask() {
     document.getElementById("skipBtn").style.display = "none";
     document.getElementById("answer").value = "";
     document.getElementById("message").innerText = "";
-    document.getElementById("answer").focus(); // Auto-focus input
+    document.getElementById("answer").focus();
 
     if (mode === "math") {
         document.getElementById("answer").type = "number";
@@ -112,75 +110,71 @@ function nextTask() {
 }
 
 function generateMath() {
-    let ops = ["+", "-", "*", "/"];
+    let ops = ["+", "-"];
     operator = ops[Math.floor(Math.random() * ops.length)];
     num1 = Math.floor(Math.random() * 11) + 10; 
     num2 = Math.floor(Math.random() * 10) + 5;
-
-    if (operator === "-") {
-        if (num2 > num1) [num1, num2] = [num2, num1];
-        correctAnswer = num1 - num2;
-    } else if (operator === "+") {
-        correctAnswer = num1 + num2;
-    } else if (operator === "*") {
-        num1 = Math.floor(Math.random() * 6) + 2;
-        num2 = Math.floor(Math.random() * 6) + 2;
-        correctAnswer = num1 * num2;
-    } else {
-        num2 = Math.floor(Math.random() * 4) + 2;
-        correctAnswer = Math.floor(Math.random() * 5) + 2;
-        num1 = num2 * correctAnswer;
-    }
-    
-    let displayOp = operator === "*" ? "×" : (operator === "/" ? "÷" : operator);
-    currentQuestionText = `${num1} ${displayOp} ${num2}`;
+    if (operator === "-" && num2 > num1) [num1, num2] = [num2, num1];
+    correctAnswer = (operator === "+") ? num1 + num2 : num1 - num2;
+    currentQuestionText = `${num1} ${operator} ${num2}`;
     document.getElementById("question").innerText = currentQuestionText;
 }
 
 function generateSpelling() {
-    currentWord = spellingWords[Math.floor(Math.random() * spellingWords.length)];
-    currentQuestionText = "Spelling Word";
+    currentWord = spellingWords[Math.floor(Math.random() * spellingWords.length)].toLowerCase();
+    
+    // Create Hint: First letter + underscores + last letter
+    let hint = currentWord[0];
+    for(let i=1; i < currentWord.length - 1; i++) {
+        hint += " _";
+    }
+    hint += " " + currentWord[currentWord.length - 1];
+    
+    document.getElementById("wordHint").innerText = hint;
+    currentQuestionText = "Spelling: " + currentWord;
     setTimeout(sayWord, 400);
 }
 
 function sayWord() {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // Stop current speech
-        let msg = new SpeechSynthesisUtterance(currentWord);
-        msg.rate = 0.75; 
-        msg.pitch = 1;
-        window.speechSynthesis.speak(msg);
-    }
+    window.speechSynthesis.cancel();
+    let msg = new SpeechSynthesisUtterance(currentWord);
+    msg.rate = 0.75;
+    window.speechSynthesis.speak(msg);
 }
 
 function checkAnswer() {
     let input = document.getElementById("answer").value.trim().toLowerCase();
     if (!input) return;
 
-    let isCorrect = (mode === "math") ? (Number(input) === correctAnswer) : (input === currentWord.toLowerCase());
+    let isCorrect = (mode === "math") ? (Number(input) === correctAnswer) : (input === currentWord);
 
     if (isCorrect) {
-        let reward = (mode === "math") ? 0.10 : 0.15; // Spelling gives a bit more!
+        let reward = 0;
+        let limitReached = false;
+
+        if (mode === "math") {
+            if (dailyMathDone < 20) { reward = 0.10; dailyMathDone++; }
+            else limitReached = true;
+        } else {
+            if (dailySpellDone < 10) { reward = 0.15; dailySpellDone++; }
+            else limitReached = true;
+        }
+
         score += reward;
-        dailyEarned += reward;
         document.getElementById("message").style.color = "green";
-        document.getElementById("message").innerText = `Great job! +$${reward.toFixed(2)}`;
+        document.getElementById("message").innerText = limitReached ? "Correct! (Daily limit reached)" : `Great job! +$${reward.toFixed(2)}`;
         updateScore();
         setTimeout(nextTask, 1200);
     } else {
         document.getElementById("message").style.color = "red";
         if (!penaltyApplied) {
-            let penalty = 0.03;
-            score -= penalty;
-            dailyEarned -= penalty; // Fixed: Now affects Today total
-            if (score < 0) score = 0;
-            if (dailyEarned < 0) dailyEarned = 0;
+            score = Math.max(0, score - 0.03);
             penaltyApplied = true;
             updateScore();
-            logError(currentQuestionText + (mode === "spelling" ? ` (${currentWord})` : ""), input);
-            document.getElementById("message").innerText = "Oops! -3¢ penalty applied.";
+            logError(currentQuestionText, input);
+            document.getElementById("message").innerText = "Oops! -3¢ penalty. Look closer!";
         } else {
-            document.getElementById("message").innerText = (attempts >= 2) ? "Let's try another." : "Try again carefully!";
+            document.getElementById("message").innerText = (attempts >= 2) ? `It was: ${mode === "math" ? correctAnswer : currentWord}` : "Try again!";
             if (attempts >= 2) document.getElementById("skipBtn").style.display = "inline-block";
         }
     }
@@ -190,24 +184,20 @@ function checkAnswer() {
 function logError(q, w) {
     let time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
     errorLog.push(`${time}: ${q} -> Typed: ${w}`);
-    if (errorLog.length > 20) errorLog.shift();
-    localStorage.setItem("errorLog", JSON.stringify(errorLog));
+    localStorage.setItem("errorLog", JSON.stringify(errorLog.slice(-20)));
 }
 
 function resetPrompt() {
     let base = Math.floor(Math.random() * 5) + 11;
-    let res = prompt(`Grown ups: What is ${base} x ${base}?`);
-    if (res == (base*base)) {
-        let c = prompt("1: Reset Today | 2: Reset All | 3: View Errors | 4: Clear Errors");
-        if (c=="1") { dailyEarned = 0; localStorage.setItem("dailyEarned", 0); }
-        if (c=="2") { score = 0; dailyEarned = 0; localStorage.setItem("balance", 0); localStorage.setItem("dailyEarned", 0); }
-        if (c=="3") alert(errorLog.join("\n") || "No errors recorded!");
-        if (c=="4") { errorLog = []; localStorage.setItem("errorLog", JSON.stringify([])); alert("Logs cleared!"); }
+    if (prompt(`Grown ups: ${base} x ${base}?`) == (base*base)) {
+        let c = prompt("1: Reset Today's Limits | 2: Reset All Balance | 3: View Errors");
+        if (c=="1") { dailyMathDone = 0; dailySpellDone = 0; }
+        if (c=="2") { score = 0; dailyMathDone = 0; dailySpellDone = 0; }
+        if (c=="3") alert(errorLog.join("\n") || "No errors!");
         updateScore();
     }
 }
 
-// Startup
 updateScore();
 nextTask();
 </script>
