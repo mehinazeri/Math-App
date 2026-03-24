@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Reward Zone 3.5</title>
+  <title>Reward Zone 3.6</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background: #f0f2f5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
@@ -13,15 +13,16 @@
     .question { font-size: 36px; font-weight: bold; margin: 10px 0; color: #333; }
     #mathInput { font-size: 28px; padding: 8px; width: 100px; border: 2px solid #ddd; border-radius: 10px; text-align: center; }
     
-    .letter-grid { display: flex; justify-content: center; gap: 4px; margin: 15px 0; flex-wrap: wrap; }
-    .letter-box { width: 30px; height: 40px; font-size: 20px; text-align: center; border: 2px solid #ddd; border-radius: 5px; text-transform: lowercase; font-weight: bold; }
+    /* Spelling Grid Styles */
+    .letter-grid { display: flex; justify-content: center; gap: 4px; margin: 15px 0; flex-wrap: wrap; min-height: 50px; }
+    .letter-box { width: 32px; height: 42px; font-size: 20px; text-align: center; border: 2px solid #ddd; border-radius: 5px; text-transform: lowercase; font-weight: bold; }
     .letter-box:focus { border-color: #4CAF50; outline: none; background: #f0fff0; }
-    .letter-box:disabled { background: #f4f4f4; color: #888; }
+    .letter-box:disabled { background: #f4f4f4; color: #888; border-color: #ccc; }
 
     #helpArea { margin-top: 15px; padding: 10px; background: #fffde7; border-radius: 12px; border: 1px dashed #fbc02d; min-height: 120px; }
     .help-title { font-size: 12px; font-weight: bold; color: #856404; margin-bottom: 8px; text-transform: uppercase; }
     
-    /* Strict 10-per-row grid */
+    /* 10-per-row grid */
     .ten-frame-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; width: fit-content; margin: 0 auto; padding: 5px; }
     .dot { width: 10px; height: 10px; border-radius: 50%; background: #2196F3; }
     .dot.secondary { background: #f44336; }
@@ -31,7 +32,7 @@
     .division-group { border: 1px solid #ddd; padding: 5px; border-radius: 6px; display: inline-block; margin: 3px; background: white; }
 
     button#submitBtn { font-size: 18px; padding: 12px 30px; background: #4CAF50; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-    #speakBtn { background: #2196F3; border-radius: 50%; width: 50px; height: 50px; font-size: 25px; color: white; border: none; cursor: pointer; }
+    #speakBtn { background: #2196F3; border-radius: 50%; width: 50px; height: 50px; font-size: 25px; color: white; border: none; cursor: pointer; margin-bottom: 10px; }
 
     #message { font-weight: bold; font-size: 16px; margin: 8px 0; height: 40px; white-space: pre-line; }
     #resetBtn { position: absolute; bottom: 5px; left: 5px; font-size: 9px; opacity: 0.4; background: none; border: none; cursor: pointer; }
@@ -49,7 +50,7 @@
   </div>
 
   <div id="spellingArea" style="display:none;">
-    <div class="question" style="font-size: 14px; color: #666;">Listen & Spell:</div>
+    <div style="font-size: 14px; color: #666; margin-bottom: 5px;">Listen & Spell:</div>
     <button id="speakBtn" onclick="sayWord()">🔊</button>
     <div class="letter-grid" id="letterGrid"></div>
   </div>
@@ -100,6 +101,8 @@ fetch(CSV_URL).then(r => r.text()).then(d => {
 
 function toggleMode() {
     mode = (mode === "math") ? "spelling" : "math";
+    document.getElementById("mathArea").style.display = (mode === "math") ? "block" : "none";
+    document.getElementById("spellingArea").style.display = (mode === "spelling") ? "block" : "none";
     nextTask();
 }
 
@@ -108,6 +111,7 @@ function nextTask() {
     document.getElementById("message").innerText = "";
     document.getElementById("visualAid").innerHTML = "";
     document.getElementById("helpTitle").innerText = "Visual Helper";
+    
     if (mode === "math") generateMath();
     else generateSpelling();
     updateScore();
@@ -138,22 +142,43 @@ function generateMath() {
 function generateSpelling() {
     currentWord = spellingWords[Math.floor(Math.random() * spellingWords.length)];
     const grid = document.getElementById("letterGrid");
-    grid.innerHTML = "";
+    grid.innerHTML = ""; // Clear old boxes
+    
     for (let i = 0; i < currentWord.length; i++) {
         const b = document.createElement("input");
-        b.className = "letter-box"; b.maxLength = 1;
-        if (i === 0) { b.value = currentWord[0]; b.disabled = true; }
-        else if (i === currentWord.length - 1) { b.value = currentWord[i]; b.disabled = true; }
-        b.oninput = (e) => { if (e.target.value && i < currentWord.length - 2) grid.children[i+1].focus(); };
+        b.className = "letter-box"; 
+        b.maxLength = 1;
+        
+        // Show first and last letter
+        if (i === 0) { 
+            b.value = currentWord[0]; 
+            b.disabled = true; 
+        } else if (i === currentWord.length - 1) { 
+            b.value = currentWord[i]; 
+            b.disabled = true; 
+        } else {
+            // Auto-jump to next box
+            b.oninput = (e) => { 
+                if (e.target.value && i < currentWord.length - 2) {
+                    grid.children[i+1].focus();
+                }
+            };
+        }
         grid.appendChild(b);
     }
-    setTimeout(() => { grid.children[1].focus(); sayWord(); }, 500);
+    
+    // Speak and focus the second box (the first empty one)
+    setTimeout(() => { 
+        if(grid.children[1]) grid.children[1].focus(); 
+        sayWord(); 
+    }, 400);
 }
 
 function sayWord() {
     window.speechSynthesis.cancel();
     let m = new SpeechSynthesisUtterance(currentWord);
-    m.rate = 0.7; window.speechSynthesis.speak(m);
+    m.rate = 0.7; 
+    window.speechSynthesis.speak(m);
 }
 
 function renderTenFrame(n, type, container) {
@@ -210,14 +235,17 @@ function showHelp() {
         }
     } else {
         document.getElementById("helpTitle").innerText = "Spelling Helper:";
-        aid.innerHTML = `<p style='font-size:20px; color:#2196F3; letter-spacing:3px'>${currentWord}</p>`;
+        aid.innerHTML = `<p style='font-size:22px; color:#2196F3; letter-spacing:4px; font-weight:bold;'>${currentWord.toUpperCase()}</p>`;
     }
 }
 
 function checkAnswer() {
     let userVal = "";
-    if (mode === "math") userVal = document.getElementById("mathInput").value;
-    else document.querySelectorAll(".letter-box").forEach(b => userVal += b.value);
+    if (mode === "math") {
+        userVal = document.getElementById("mathInput").value;
+    } else {
+        document.querySelectorAll(".letter-box").forEach(b => userVal += b.value);
+    }
 
     if (!userVal) return;
     const correct = (mode === "math") ? (parseInt(userVal) === correctAnswer) : (userVal.toLowerCase() === currentWord);
@@ -260,8 +288,9 @@ function updateScore() {
 
 function resetPrompt() {
     let b = Math.floor(Math.random()*4)+11;
-    if (prompt(`Grown-ups only: ${b}x${b}?`) == b*b) {
-        let c = prompt("1: Reset Today's Limits\n2: Reset Total Balance\n3: View Error Log");
+    let res = prompt(`Admin Check: ${b}x${b}?`);
+    if (res == b*b) {
+        let c = prompt("1: Reset Today's Progress\n2: Reset Total Balance\n3: View Error Log");
         if (c=="1") { dailyMath = 0; dailySpell = 0; }
         else if (c=="2") { score = 0; dailyMath = 0; dailySpell = 0; }
         else if (c=="3") { alert(errorLog.join("\n") || "No errors logged!"); }
@@ -269,6 +298,7 @@ function resetPrompt() {
     }
 }
 
+// Initial start
 nextTask();
 </script>
 </body>
