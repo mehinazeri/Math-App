@@ -22,6 +22,7 @@
       border-radius: 16px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       position: relative; 
+      min-height: 350px;
     }
     .question {
       font-size: 36px;
@@ -73,14 +74,15 @@
       display: inline-block;
       margin-top: 15px;
     }
+    /* Reset Button moved to Bottom-Left of the box */
     #resetBtn {
       position: absolute;
-      top: 10px;
-      right: 10px;
+      bottom: 10px;
+      left: 10px;
       font-size: 10px;
       padding: 5px 8px;
       background: #f0f0f0;
-      color: #888;
+      color: #aaa;
       border: 1px solid #ddd;
       border-radius: 4px;
       opacity: 0.6;
@@ -95,8 +97,6 @@
 <body>
 
 <div class="box">
-  <button id="resetBtn" onclick="resetPrompt()">Reset</button>
-
   <h2>Math Reward 💰</h2>
 
   <div class="question" id="question"></div>
@@ -114,6 +114,8 @@
   <br>
   <div id="score"></div>
   <p id="message"></p>
+
+  <button id="resetBtn" onclick="resetPrompt()">Reset</button>
 </div>
 
 <script>
@@ -167,8 +169,10 @@ function newQuestion() {
 
   if (difficulty === "easy") {
     operator = Math.random() > 0.5 ? "+" : "-";
-    num1 = getRandom(3, 10);
-    num2 = getRandom(3, 10);
+    // Modified: Ensuring numbers are mostly double digits (10-20)
+    num1 = getRandom(10, 20);
+    num2 = getRandom(5, 15);
+    
     if (operator === "-") {
       if (num2 > num1) [num1, num2] = [num2, num1];
       correctAnswer = num1 - num2;
@@ -178,7 +182,7 @@ function newQuestion() {
   } 
   else if (difficulty === "medium") {
     if (operator === "+" || operator === "-") {
-      num1 = getRandom(10, 30);
+      num1 = getRandom(15, 40);
       num2 = getRandom(10, 30);
       if (operator === "-") {
         if (num2 > num1) [num1, num2] = [num2, num1];
@@ -187,19 +191,20 @@ function newQuestion() {
         correctAnswer = num1 + num2;
       }
     } else if (operator === "*") {
-      num1 = getRandom(2, 6);
-      num2 = getRandom(2, 6);
+      num1 = getRandom(2, 7);
+      num2 = getRandom(2, 7);
       correctAnswer = num1 * num2;
     } else {
       num2 = getRandom(2, 5);
-      correctAnswer = getRandom(2, 5);
+      correctAnswer = getRandom(2, 6);
       num1 = num2 * correctAnswer;
     }
   } 
   else {
+    // Hard Mode
     if (operator === "+" || operator === "-") {
-      num1 = getRandom(30, 100);
-      num2 = getRandom(30, 100);
+      num1 = getRandom(40, 100);
+      num2 = getRandom(20, 80);
       if (operator === "-") {
         if (num2 > num1) [num1, num2] = [num2, num1];
         correctAnswer = num1 - num2;
@@ -207,12 +212,12 @@ function newQuestion() {
         correctAnswer = num1 + num2;
       }
     } else if (operator === "*") {
-      num1 = getRandom(5, 12);
-      num2 = getRandom(5, 12);
+      num1 = getRandom(6, 12);
+      num2 = getRandom(4, 11);
       correctAnswer = num1 * num2;
     } else {
-      num2 = getRandom(5, 10);
-      correctAnswer = getRandom(5, 10);
+      num2 = getRandom(5, 12);
+      correctAnswer = getRandom(5, 12);
       num1 = num2 * correctAnswer;
     }
   }
@@ -245,15 +250,15 @@ function checkAnswer() {
     setTimeout(newQuestion, 1200);
   } else {
     if (!penaltyApplied) {
-      score -= 0.03; // Corrected: 3 cents penalty
+      score -= 0.03; // 3 cents penalty
       if (score < 0) score = 0;
       penaltyApplied = true;
-      alert("Oops! Careful... a 3 cent penalty was applied.");
+      alert("Oops! A 3 cent penalty was applied. Look closer!");
       updateScore();
     }
     document.getElementById("message").style.color = "red";
     if (attempts >= 3) {
-      document.getElementById("message").innerText = "Let's try another one.";
+      document.getElementById("message").innerText = "Let's try a different one.";
       document.getElementById("skipBtn").style.display = "inline-block";
     } else {
       document.getElementById("message").innerText = "Try again carefully!";
@@ -283,7 +288,7 @@ function resetPrompt() {
     updateScore();
     alert("Reset successful.");
   } else {
-    alert("Incorrect.");
+    alert("Incorrect answer.");
   }
 }
 
