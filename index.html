@@ -22,7 +22,7 @@
       border-radius: 16px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       position: relative; 
-      min-height: 350px;
+      min-height: 380px;
     }
     .question {
       font-size: 36px;
@@ -63,7 +63,8 @@
     #message {
       margin-top: 15px;
       font-weight: bold;
-      min-height: 24px;
+      min-height: 48px; /* Slightly taller to accommodate two lines of text if needed */
+      line-height: 1.4;
     }
     #score {
       color: #555;
@@ -74,7 +75,6 @@
       display: inline-block;
       margin-top: 15px;
     }
-    /* Reset Button moved to Bottom-Left of the box */
     #resetBtn {
       position: absolute;
       bottom: 10px;
@@ -139,7 +139,7 @@ updateScore();
 function updateScore() {
   document.getElementById("score").innerText =
     "Balance: $" + score.toFixed(2) + " | Today: $" + dailyEarned.toFixed(2);
-  localStorage.setItem("balance", score);
+  localStorage.setItem("balance", score.toFixed(2));
 }
 
 function getRandom(min, max) {
@@ -169,7 +169,6 @@ function newQuestion() {
 
   if (difficulty === "easy") {
     operator = Math.random() > 0.5 ? "+" : "-";
-    // Modified: Ensuring numbers are mostly double digits (10-20)
     num1 = getRandom(10, 20);
     num2 = getRandom(5, 15);
     
@@ -201,7 +200,6 @@ function newQuestion() {
     }
   } 
   else {
-    // Hard Mode
     if (operator === "+" || operator === "-") {
       num1 = getRandom(40, 100);
       num2 = getRandom(20, 80);
@@ -249,19 +247,23 @@ function checkAnswer() {
     updateScore();
     setTimeout(newQuestion, 1200);
   } else {
+    document.getElementById("message").style.color = "red";
+    
     if (!penaltyApplied) {
-      score -= 0.03; // 3 cents penalty
+      score -= 0.03;
       if (score < 0) score = 0;
       penaltyApplied = true;
-      alert("Oops! A 3 cent penalty was applied. Look closer!");
       updateScore();
-    }
-    document.getElementById("message").style.color = "red";
-    if (attempts >= 3) {
-      document.getElementById("message").innerText = "Let's try a different one.";
-      document.getElementById("skipBtn").style.display = "inline-block";
+      // Instead of an alert, we show it in the app text
+      document.getElementById("message").innerText = "Oops! Look closer. \n -3¢ penalty applied.";
     } else {
-      document.getElementById("message").innerText = "Try again carefully!";
+      // Message for 2nd and 3rd attempts
+      if (attempts >= 3) {
+        document.getElementById("message").innerText = "Let's try a different one.";
+        document.getElementById("skipBtn").style.display = "inline-block";
+      } else {
+        document.getElementById("message").innerText = "Try again carefully!";
+      }
     }
   }
 }
