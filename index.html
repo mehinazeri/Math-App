@@ -1,310 +1,215 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Math Reward</title>
+  <title>Learning Rewards</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      text-align: center;
-      background: #f0f2f5;
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .box {
-      background: white;
-      padding: 30px 20px;
-      width: 90%;
-      max-width: 400px;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      position: relative; 
-      min-height: 380px;
-    }
-    .question {
-      font-size: 36px;
-      font-weight: bold;
-      margin: 20px 0;
-      color: #333;
-    }
-    input {
-      font-size: 22px;
-      padding: 12px;
-      width: 70%;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      outline: none;
-    }
-    input:focus {
-      border-color: #4CAF50;
-    }
-    button {
-      font-size: 16px;
-      padding: 12px 24px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    #skipBtn {
-      background-color: #ff9800;
-      margin-top: 10px;
-      font-size: 13px;
-    }
-    #message {
-      margin-top: 15px;
-      font-weight: bold;
-      min-height: 48px;
-      line-height: 1.4;
-    }
-    #score {
-      color: #555;
-      font-size: 14px;
-      background: #eee;
-      padding: 8px;
-      border-radius: 20px;
-      display: inline-block;
-      margin-top: 15px;
-    }
-    #resetBtn {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      font-size: 10px;
-      padding: 5px 8px;
-      background: #f0f0f0;
-      color: #aaa;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      opacity: 0.6;
-    }
+    body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background: #f0f2f5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    .box { background: white; padding: 30px 20px; width: 90%; max-width: 400px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; min-height: 420px; }
+    .question { font-size: 32px; font-weight: bold; margin: 20px 0; color: #333; min-height: 50px; display: flex; align-items: center; justify-content: center; }
+    input { font-size: 22px; padding: 12px; width: 85%; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 15px; outline: none; text-align: center; }
+    input:focus { border-color: #4CAF50; }
+    button { font-size: 16px; padding: 12px 24px; background-color: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; margin: 5px; font-weight: bold; }
+    #speakBtn { background-color: #2196F3; font-size: 28px; padding: 15px 50px; border-radius: 50px; box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3); }
+    #modeBtn { background-color: #9c27b0; margin-bottom: 15px; font-size: 12px; padding: 8px 15px; }
+    #message { margin-top: 15px; font-weight: bold; min-height: 48px; line-height: 1.4; font-size: 18px; }
+    #score { color: #555; font-size: 14px; background: #eee; padding: 8px 15px; border-radius: 20px; display: inline-block; margin-top: 10px; font-weight: 600; }
+    #resetBtn { position: absolute; bottom: 10px; left: 10px; font-size: 10px; padding: 5px 8px; background: #f0f0f0; color: #aaa; border: 1px solid #ddd; border-radius: 4px; }
   </style>
 </head>
 <body>
 
 <div class="box">
-  <h2>Math Reward 💰</h2>
-  <div class="question" id="question"></div>
-  <input type="number" id="answer" placeholder="?">
+  <button id="modeBtn" onclick="toggleMode()">Switch to Spelling</button>
+  <h2 style="margin-top:0;">Reward Zone 💰</h2>
+
+  <div id="mathArea">
+    <div class="question" id="question"></div>
+  </div>
+
+  <div id="spellingArea" style="display:none;">
+    <p style="color:#666; margin-bottom:10px;">Click to hear the word:</p>
+    <button id="speakBtn" onclick="sayWord()">🔊</button>
+  </div>
+
+  <br>
+  <input type="text" id="answer" placeholder="Type here..." autocomplete="off">
   <br>
   <button onclick="checkAnswer()">Submit</button>
   <br>
-  <button id="skipBtn" onclick="newQuestion()" style="display:none;">Get a different question</button>
-  <br>
+  <button id="skipBtn" onclick="nextTask()" style="display:none; background:#ff9800;">Try another</button>
+  
   <div id="score"></div>
   <p id="message"></p>
   <button id="resetBtn" onclick="resetPrompt()">Reset / Logs</button>
 </div>
 
 <script>
+// --- GOOGLE SHEETS CONFIG ---
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6laLcpDJNQ4Lo99PY6WixZYa-I7DQJjskjc1teW22s2YQtcLBRmKPs6g94xQ7Du9FxuXGFYksIwst/pub?gid=0&single=true&output=csv';
+
+let mode = "math"; 
 let num1, num2, operator, correctAnswer, currentQuestionText;
-let questionCount = 0;
+let spellingWords = ["loading"]; 
+let currentWord = "";
 let attempts = 0;
 let penaltyApplied = false;
 
 let score = parseFloat(localStorage.getItem("balance")) || 0;
-let today = new Date().toDateString();
-let savedDate = localStorage.getItem("date");
 let dailyEarned = parseFloat(localStorage.getItem("dailyEarned")) || 0;
 let errorLog = JSON.parse(localStorage.getItem("errorLog")) || [];
+let today = new Date().toDateString();
 
-if (savedDate !== today) {
+// Date Check for Daily Reset
+if (localStorage.getItem("date") !== today) {
   dailyEarned = 0;
+  localStorage.setItem("dailyEarned", 0);
   localStorage.setItem("date", today);
 }
 
-updateScore();
+// Load Words from Google Sheets
+fetch(CSV_URL)
+  .then(res => res.text())
+  .then(data => {
+    // Split by line and clean up whitespace
+    spellingWords = data.split(/\r?\n/).map(w => w.trim()).filter(w => w.length > 0);
+    console.log("Sheet Loaded:", spellingWords);
+  })
+  .catch(err => {
+    console.error("Sheet Error:", err);
+    spellingWords = ["apple", "school", "friend"]; // Fallback
+  });
 
 function updateScore() {
-  document.getElementById("score").innerText =
-    "Balance: $" + score.toFixed(2) + " | Today: $" + dailyEarned.toFixed(2);
+  document.getElementById("score").innerText = `Balance: $${score.toFixed(2)} | Today: $${dailyEarned.toFixed(2)}`;
   localStorage.setItem("balance", score.toFixed(2));
+  localStorage.setItem("dailyEarned", dailyEarned.toFixed(2));
 }
 
-function getRandom(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+function toggleMode() {
+    mode = (mode === "math") ? "spelling" : "math";
+    document.getElementById("modeBtn").innerText = (mode === "math") ? "Switch to Spelling" : "Switch to Math";
+    document.getElementById("mathArea").style.display = (mode === "math") ? "block" : "none";
+    document.getElementById("spellingArea").style.display = (mode === "spelling") ? "block" : "none";
+    nextTask();
 }
 
-function getDifficulty() {
-  let cycle = questionCount % 20;
-  if (cycle < 8) return "easy";
-  if (cycle < 16) return "medium";
-  return "hard";
+function nextTask() {
+    attempts = 0;
+    penaltyApplied = false;
+    document.getElementById("skipBtn").style.display = "none";
+    document.getElementById("answer").value = "";
+    document.getElementById("message").innerText = "";
+    document.getElementById("answer").focus(); // Auto-focus input
+
+    if (mode === "math") {
+        document.getElementById("answer").type = "number";
+        generateMath();
+    } else {
+        document.getElementById("answer").type = "text";
+        generateSpelling();
+    }
 }
 
-function getReward(diff) {
-  if (diff === "easy") return 0.05;
-  if (diff === "medium") return 0.10;
-  return 0.15;
-}
+function generateMath() {
+    let ops = ["+", "-", "*", "/"];
+    operator = ops[Math.floor(Math.random() * ops.length)];
+    num1 = Math.floor(Math.random() * 11) + 10; 
+    num2 = Math.floor(Math.random() * 10) + 5;
 
-function newQuestion() {
-  attempts = 0;
-  penaltyApplied = false;
-  document.getElementById("skipBtn").style.display = "none";
-  let difficulty = getDifficulty();
-  let ops = ["+", "-", "*", "/"];
-  operator = ops[Math.floor(Math.random() * ops.length)];
-
-  if (difficulty === "easy") {
-    operator = Math.random() > 0.5 ? "+" : "-";
-    num1 = getRandom(10, 20);
-    num2 = getRandom(5, 15);
     if (operator === "-") {
-      if (num2 > num1) [num1, num2] = [num2, num1];
-      correctAnswer = num1 - num2;
-    } else {
-      correctAnswer = num1 + num2;
-    }
-  } 
-  else if (difficulty === "medium") {
-    if (operator === "+" || operator === "-") {
-      num1 = getRandom(15, 40);
-      num2 = getRandom(10, 30);
-      if (operator === "-") {
         if (num2 > num1) [num1, num2] = [num2, num1];
         correctAnswer = num1 - num2;
-      } else {
+    } else if (operator === "+") {
         correctAnswer = num1 + num2;
-      }
     } else if (operator === "*") {
-      num1 = getRandom(2, 7);
-      num2 = getRandom(2, 7);
-      correctAnswer = num1 * num2;
+        num1 = Math.floor(Math.random() * 6) + 2;
+        num2 = Math.floor(Math.random() * 6) + 2;
+        correctAnswer = num1 * num2;
     } else {
-      num2 = getRandom(2, 5);
-      correctAnswer = getRandom(2, 6);
-      num1 = num2 * correctAnswer;
+        num2 = Math.floor(Math.random() * 4) + 2;
+        correctAnswer = Math.floor(Math.random() * 5) + 2;
+        num1 = num2 * correctAnswer;
     }
-  } 
-  else {
-    if (operator === "+" || operator === "-") {
-      num1 = getRandom(40, 100);
-      num2 = getRandom(20, 80);
-      if (operator === "-") {
-        if (num2 > num1) [num1, num2] = [num2, num1];
-        correctAnswer = num1 - num2;
-      } else {
-        correctAnswer = num1 + num2;
-      }
-    } else if (operator === "*") {
-      num1 = getRandom(6, 12);
-      num2 = getRandom(4, 11);
-      correctAnswer = num1 * num2;
-    } else {
-      num2 = getRandom(5, 12);
-      correctAnswer = getRandom(5, 12);
-      num1 = num2 * correctAnswer;
-    }
-  }
-
-  let displayOperator = operator === "*" ? "×" : (operator === "/" ? "÷" : operator);
-  currentQuestionText = num1 + " " + displayOperator + " " + num2;
-  document.getElementById("question").innerText = currentQuestionText;
-  document.getElementById("answer").value = "";
-  document.getElementById("message").innerText = "";
+    
+    let displayOp = operator === "*" ? "×" : (operator === "/" ? "÷" : operator);
+    currentQuestionText = `${num1} ${displayOp} ${num2}`;
+    document.getElementById("question").innerText = currentQuestionText;
 }
 
-function logError(question, wrongAns) {
-  let timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  errorLog.push(`${timestamp}: Missed "${question}" (Typed: ${wrongAns})`);
-  if (errorLog.length > 20) errorLog.shift(); // Keep only last 20 errors
-  localStorage.setItem("errorLog", JSON.stringify(errorLog));
+function generateSpelling() {
+    currentWord = spellingWords[Math.floor(Math.random() * spellingWords.length)];
+    currentQuestionText = "Spelling Word";
+    setTimeout(sayWord, 400);
+}
+
+function sayWord() {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Stop current speech
+        let msg = new SpeechSynthesisUtterance(currentWord);
+        msg.rate = 0.75; 
+        msg.pitch = 1;
+        window.speechSynthesis.speak(msg);
+    }
 }
 
 function checkAnswer() {
-  let input = document.getElementById("answer").value;
-  if (input === "") return;
+    let input = document.getElementById("answer").value.trim().toLowerCase();
+    if (!input) return;
 
-  let userAnswer = Number(input);
-  attempts++;
+    let isCorrect = (mode === "math") ? (Number(input) === correctAnswer) : (input === currentWord.toLowerCase());
 
-  if (userAnswer === correctAnswer) {
-    let difficulty = getDifficulty();
-    let reward = getReward(difficulty);
-    if (dailyEarned < 3) {
-      score += reward;
-      dailyEarned += reward;
-    }
-    document.getElementById("message").style.color = "green";
-    document.getElementById("message").innerText = "Great job! +$" + reward.toFixed(2);
-    questionCount++;
-    localStorage.setItem("dailyEarned", dailyEarned);
-    updateScore();
-    setTimeout(newQuestion, 1200);
-  } else {
-    document.getElementById("message").style.color = "red";
-    if (!penaltyApplied) {
-      score -= 0.03;
-      if (score < 0) score = 0;
-      penaltyApplied = true;
-      updateScore();
-      
-      // LOG THE ERROR HERE
-      logError(currentQuestionText, userAnswer);
-      
-      document.getElementById("message").innerText = "Oops! Look closer. \n -3¢ penalty applied.";
+    if (isCorrect) {
+        let reward = (mode === "math") ? 0.10 : 0.15; // Spelling gives a bit more!
+        score += reward;
+        dailyEarned += reward;
+        document.getElementById("message").style.color = "green";
+        document.getElementById("message").innerText = `Great job! +$${reward.toFixed(2)}`;
+        updateScore();
+        setTimeout(nextTask, 1200);
     } else {
-      if (attempts >= 3) {
-        document.getElementById("message").innerText = "Let's try a different one.";
-        document.getElementById("skipBtn").style.display = "inline-block";
-      } else {
-        document.getElementById("message").innerText = "Try again carefully!";
-      }
+        document.getElementById("message").style.color = "red";
+        if (!penaltyApplied) {
+            let penalty = 0.03;
+            score -= penalty;
+            dailyEarned -= penalty; // Fixed: Now affects Today total
+            if (score < 0) score = 0;
+            if (dailyEarned < 0) dailyEarned = 0;
+            penaltyApplied = true;
+            updateScore();
+            logError(currentQuestionText + (mode === "spelling" ? ` (${currentWord})` : ""), input);
+            document.getElementById("message").innerText = "Oops! -3¢ penalty applied.";
+        } else {
+            document.getElementById("message").innerText = (attempts >= 2) ? "Let's try another." : "Try again carefully!";
+            if (attempts >= 2) document.getElementById("skipBtn").style.display = "inline-block";
+        }
     }
-  }
+    attempts++;
+}
+
+function logError(q, w) {
+    let time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    errorLog.push(`${time}: ${q} -> Typed: ${w}`);
+    if (errorLog.length > 20) errorLog.shift();
+    localStorage.setItem("errorLog", JSON.stringify(errorLog));
 }
 
 function resetPrompt() {
-  let base = getRandom(11, 15);
-  let correct = base * base;
-  let user = prompt("Grown-ups only! What is " + base + " squared?");
-  if (user === null) return;
-
-  if (Number(user) === correct) {
-    let choice = prompt(
-      "1: Reset Today\n" +
-      "2: Reset Total\n" +
-      "3: Reset All\n" +
-      "4: View Error Log (Mistakes)\n" +
-      "5: Clear Error Log"
-    );
-    
-    if (choice === "1") {
-      dailyEarned = 0;
-      localStorage.setItem("dailyEarned", 0);
-    } else if (choice === "2") {
-      score = 0;
-      localStorage.setItem("balance", 0);
-    } else if (choice === "3") {
-      dailyEarned = 0; score = 0;
-      localStorage.setItem("dailyEarned", 0);
-      localStorage.setItem("balance", 0);
-    } else if (choice === "4") {
-      if (errorLog.length === 0) alert("No mistakes logged yet! She's doing great.");
-      else alert("Recent Mistakes:\n\n" + errorLog.join("\n"));
-    } else if (choice === "5") {
-      errorLog = [];
-      localStorage.setItem("errorLog", JSON.stringify([]));
-      alert("Log cleared.");
+    let base = Math.floor(Math.random() * 5) + 11;
+    let res = prompt(`Grown ups: What is ${base} x ${base}?`);
+    if (res == (base*base)) {
+        let c = prompt("1: Reset Today | 2: Reset All | 3: View Errors | 4: Clear Errors");
+        if (c=="1") { dailyEarned = 0; localStorage.setItem("dailyEarned", 0); }
+        if (c=="2") { score = 0; dailyEarned = 0; localStorage.setItem("balance", 0); localStorage.setItem("dailyEarned", 0); }
+        if (c=="3") alert(errorLog.join("\n") || "No errors recorded!");
+        if (c=="4") { errorLog = []; localStorage.setItem("errorLog", JSON.stringify([])); alert("Logs cleared!"); }
+        updateScore();
     }
-    updateScore();
-  } else {
-    alert("Incorrect.");
-  }
 }
 
-newQuestion();
+// Startup
+updateScore();
+nextTask();
 </script>
-
 </body>
 </html>
