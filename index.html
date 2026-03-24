@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Math Reward</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #f5f5f5;
+      margin-top: 50px;
+    }
+    .box {
+      background: white;
+      padding: 25px;
+      margin: auto;
+      width: 90%;
+      max-width: 350px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    }
+    .question {
+      font-size: 32px;
+      margin-bottom: 20px;
+    }
+    input {
+      font-size: 20px;
+      padding: 10px;
+      width: 80%;
+      margin-bottom: 15px;
+    }
+    button {
+      font-size: 14px;
+      padding: 10px;
+      margin: 5px;
+    }
+    #message {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    #resetBtn {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      font-size: 12px;
+      padding: 8px;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h2>Math Reward 💰</h2>
+
+  <div class="question" id="question"></div>
+
+  <input type="number" id="answer" placeholder="Your answer">
+
+  <br>
+  <button onclick="checkAnswer()">Submit</button>
+
+  <br>
+  <button id="skipBtn" onclick="newQuestion()" style="display:none;">
+    I don't know the answer now, but I will ask and come back to it later. Can I have a new question please?
+  </button>
+
+  <h3 id="score"></h3>
+  <p id="message"></p>
+</div>
+
+<button id="resetBtn" onclick="resetPrompt()">Reset</button>
+
+<script>
+let num1, num2, operator, correctAnswer;
+
+let questionCount = 0;
+let attempts = 0;
+let penaltyApplied = false;
+
+let score = parseFloat(localStorage.getItem("balance")) || 0;
+
+let today = new Date().toDateString();
+let savedDate = localStorage.getItem("date");
+let dailyEarned = parseFloat(localStorage.getItem("dailyEarned")) || 0;
+
+if (savedDate !== today) {
+  dailyEarned = 0;
+  localStorage.setItem("date", today);
+}
+
+updateScore();
+
+function updateScore() {
+  document.getElementById("score").innerText =
+    "Balance: $" + score.toFixed(2) + " | Today: $" + dailyEarned.toFixed(2);
+  localStorage.setItem("balance", score);
+}
+
+function getRandom(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function getDifficulty() {
+  let cycle = questionCount % 20;
+  if (cycle < 8) return "easy";
+  if (cycle < 16) return "medium";
+  return "hard";
+}
+
+function getReward(diff) {
+  if (diff === "easy") return 0.05;
+  if (diff === "medium") return 0.10;
+  return 0.15;
+}
+
+function newQuestion() {
+  attempts = 0;
+  penaltyApplied = false;
+  document.getElementById("skipBtn").style.display = "none";
+
+  let difficulty = getDifficulty();
+
+  let ops = ["+", "-", "*", "/"];
+  operator = ops[Math.floor(Math.random() * ops.length)];
+
+  if (difficulty === "easy") {
+    operator = Math.random() > 0.5 ? "+" : "-";
+    num1 = getRandom(3, 10);
+    num2 = getRandom(3, 10);
+
+    if (operator === "-") {
+      if (num2 > num1) [num1, num2] = [num2, num1];
+      correctAnswer = num1 - num2;
+    } else {
+      correctAnswer = num1 + num2;
+    }
+  }
+
+  else if (difficulty === "medium") {
+    if (operator === "+" || operator === "-") {
+      num1 = getRandom(10, 30);
+      num2 = getRandom(10, 30);
+
+      if (operator === "-") {
+        if (num2 > num1) [num1, num2] = [num2, num1];
+        correctAnswer = num1 - num2;
+      } else {
+        correctAnswer = num1 + num2;
+      }
+
+    } else {
+      num1 = getRandom(1, 5);
+      num2 = getRandom(1, 5);
+      correctAnswer = operator === "*" ? num1 * num2 : null;
+    }
+
+    if (operator === "/") {
+      num2 = getRandom(1, 5);
+      correctAnswer = getRandom(1, 5);
+      num1 = num2 * correctAnswer;
+    }
+  }
+
+  else {
+    if (operator === "+" || operator === "-") {
+      num1 = getRandom(30, 100);
+      num2 = getRandom(30, 100);
+
+      if (operator === "-") {
+        if (num2 > num1) [num1, num2] = [num2, num1];
+        correctAnswer = num1 - num2;
+      } else {
+        correctAnswer = num1 + num2;
+      }
+
+    } else {
+      num1 = getRandom(5, 10);
+      num2 = getRandom(5, 10);
+      correctAnswer = operator === "*" ? num1 * num2 : null;
+    }
+
+    if (operator === "/") {
+      num2 = getRandom(5, 10);
+      correctAnswer = getRandom(5, 10);
+      num1 = num2 * correctAnswer;
+    }
+  }
+
+  let displayOperator = operator === "*" ? "X" : operator;
+
+  document.getElementById("question").innerText =
+    num1 + " " + displayOperator + " " + num2 + " = ?";
+
+  document.getElementById("answer").value = "";
+  document.getElementById("message").innerText = "";
+}
+
+function checkAnswer() {
+  let input = document.getElementById("answer").value;
+
+  if (input === "") {
+    document.getElementById("message").innerText = "Enter a number!";
+    return;
+  }
+
+  let userAnswer = Number(input);
+  attempts++;
+
+  if (userAnswer === correctAnswer) {
+
+    let difficulty = getDifficulty();
+    let reward = getReward(difficulty);
+
+    if (dailyEarned < 3) {
+      score += reward;
+      dailyEarned += reward;
+    }
+
+    document.getElementById("message").innerText = "Great job!";
+
+    questionCount++;
+    localStorage.setItem("dailyEarned", dailyEarned);
+    updateScore();
+
+    setTimeout(newQuestion, 800);
+
+  } else {
+
+    if (!penaltyApplied) {
+      score -= 0.03;
+      if (score < 0) score = 0;
+      penaltyApplied = true;
+
+      alert("Sorry, Penalty of 30 cents!");
+      updateScore();
+    }
+
+    if (attempts >= 3) {
+      document.getElementById("message").innerText =
+        "Let's try another one later.";
+      document.getElementById("skipBtn").style.display = "inline-block";
+    } else {
+      document.getElementById("message").innerText =
+        "Try again carefully!";
+    }
+  }
+}
+
+function resetPrompt() {
+  let base = getRandom(10, 20);
+  let correct = base * base;
+
+  let user = prompt("Grown-ups only! What is " + base + "² ?");
+
+  if (user === null) return;
+
+  if (Number(user) === correct) {
+
+    let choice = prompt(
+      "Type:\n1 → Reset Daily\n2 → Reset Total\n3 → Reset BOTH"
+    );
+
+    if (choice === "1") {
+      dailyEarned = 0;
+      localStorage.setItem("dailyEarned", 0);
+      alert("Daily reset done");
+    }
+
+    else if (choice === "2") {
+      score = 0;
+      localStorage.setItem("balance", 0);
+      alert("Total reset done");
+    }
+
+    else if (choice === "3") {
+      dailyEarned = 0;
+      score = 0;
+      localStorage.setItem("dailyEarned", 0);
+      localStorage.setItem("balance", 0);
+      alert("Everything reset");
+    }
+
+    updateScore();
+
+  } else {
+    alert("Wrong answer. Access denied.");
+  }
+}
+
+newQuestion();
+</script>
+
+</body>
+</html>
