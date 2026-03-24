@@ -63,7 +63,7 @@
     #message {
       margin-top: 15px;
       font-weight: bold;
-      min-height: 48px; /* Slightly taller to accommodate two lines of text if needed */
+      min-height: 48px;
       line-height: 1.4;
     }
     #score {
@@ -87,39 +87,26 @@
       border-radius: 4px;
       opacity: 0.6;
     }
-    #resetBtn:hover {
-      opacity: 1;
-      background: #ffebee;
-      color: #d32f2f;
-    }
   </style>
 </head>
 <body>
 
 <div class="box">
   <h2>Math Reward 💰</h2>
-
   <div class="question" id="question"></div>
-
   <input type="number" id="answer" placeholder="?">
-
   <br>
   <button onclick="checkAnswer()">Submit</button>
-
   <br>
-  <button id="skipBtn" onclick="newQuestion()" style="display:none;">
-    Get a different question
-  </button>
-
+  <button id="skipBtn" onclick="newQuestion()" style="display:none;">Get a different question</button>
   <br>
   <div id="score"></div>
   <p id="message"></p>
-
-  <button id="resetBtn" onclick="resetPrompt()">Reset</button>
+  <button id="resetBtn" onclick="resetPrompt()">Reset / Logs</button>
 </div>
 
 <script>
-let num1, num2, operator, correctAnswer;
+let num1, num2, operator, correctAnswer, currentQuestionText;
 let questionCount = 0;
 let attempts = 0;
 let penaltyApplied = false;
@@ -128,6 +115,7 @@ let score = parseFloat(localStorage.getItem("balance")) || 0;
 let today = new Date().toDateString();
 let savedDate = localStorage.getItem("date");
 let dailyEarned = parseFloat(localStorage.getItem("dailyEarned")) || 0;
+let errorLog = JSON.parse(localStorage.getItem("errorLog")) || [];
 
 if (savedDate !== today) {
   dailyEarned = 0;
@@ -171,7 +159,6 @@ function newQuestion() {
     operator = Math.random() > 0.5 ? "+" : "-";
     num1 = getRandom(10, 20);
     num2 = getRandom(5, 15);
-    
     if (operator === "-") {
       if (num2 > num1) [num1, num2] = [num2, num1];
       correctAnswer = num1 - num2;
@@ -221,9 +208,17 @@ function newQuestion() {
   }
 
   let displayOperator = operator === "*" ? "×" : (operator === "/" ? "÷" : operator);
-  document.getElementById("question").innerText = num1 + " " + displayOperator + " " + num2;
+  currentQuestionText = num1 + " " + displayOperator + " " + num2;
+  document.getElementById("question").innerText = currentQuestionText;
   document.getElementById("answer").value = "";
   document.getElementById("message").innerText = "";
+}
+
+function logError(question, wrongAns) {
+  let timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  errorLog.push(`${timestamp}: Missed "${question}" (Typed: ${wrongAns})`);
+  if (errorLog.length > 20) errorLog.shift(); // Keep only last 20 errors
+  localStorage.setItem("errorLog", JSON.stringify(errorLog));
 }
 
 function checkAnswer() {
@@ -248,16 +243,17 @@ function checkAnswer() {
     setTimeout(newQuestion, 1200);
   } else {
     document.getElementById("message").style.color = "red";
-    
     if (!penaltyApplied) {
       score -= 0.03;
       if (score < 0) score = 0;
       penaltyApplied = true;
       updateScore();
-      // Instead of an alert, we show it in the app text
+      
+      // LOG THE ERROR HERE
+      logError(currentQuestionText, userAnswer);
+      
       document.getElementById("message").innerText = "Oops! Look closer. \n -3¢ penalty applied.";
     } else {
-      // Message for 2nd and 3rd attempts
       if (attempts >= 3) {
         document.getElementById("message").innerText = "Let's try a different one.";
         document.getElementById("skipBtn").style.display = "inline-block";
@@ -275,7 +271,14 @@ function resetPrompt() {
   if (user === null) return;
 
   if (Number(user) === correct) {
-    let choice = prompt("1: Reset Today | 2: Reset Total | 3: Reset All");
+    let choice = prompt(
+      "1: Reset Today\n" +
+      "2: Reset Total\n" +
+      "3: Reset All\n" +
+      "4: View Error Log (Mistakes)\n" +
+      "5: Clear Error Log"
+    );
+    
     if (choice === "1") {
       dailyEarned = 0;
       localStorage.setItem("dailyEarned", 0);
@@ -286,11 +289,17 @@ function resetPrompt() {
       dailyEarned = 0; score = 0;
       localStorage.setItem("dailyEarned", 0);
       localStorage.setItem("balance", 0);
+    } else if (choice === "4") {
+      if (errorLog.length === 0) alert("No mistakes logged yet! She's doing great.");
+      else alert("Recent Mistakes:\n\n" + errorLog.join("\n"));
+    } else if (choice === "5") {
+      errorLog = [];
+      localStorage.setItem("errorLog", JSON.stringify([]));
+      alert("Log cleared.");
     }
     updateScore();
-    alert("Reset successful.");
   } else {
-    alert("Incorrect answer.");
+    alert("Incorrect.");
   }
 }
 
