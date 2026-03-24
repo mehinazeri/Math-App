@@ -5,81 +5,124 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      font-family: Arial;
+      font-family: 'Segoe UI', Arial, sans-serif;
       text-align: center;
-      background: #f5f5f5;
-      margin-top: 50px;
+      background: #f0f2f5;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
     .box {
       background: white;
-      padding: 25px;
-      margin: auto;
+      padding: 30px 20px;
       width: 90%;
-      max-width: 350px;
-      border-radius: 12px;
-      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+      max-width: 400px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      position: relative; 
     }
     .question {
-      font-size: 32px;
-      margin-bottom: 20px;
+      font-size: 36px;
+      font-weight: bold;
+      margin: 20px 0;
+      color: #333;
     }
     input {
-      font-size: 20px;
-      padding: 10px;
-      width: 80%;
+      font-size: 22px;
+      padding: 12px;
+      width: 70%;
+      border: 2px solid #ddd;
+      border-radius: 8px;
       margin-bottom: 15px;
+      outline: none;
+    }
+    input:focus {
+      border-color: #4CAF50;
     }
     button {
-      font-size: 14px;
-      padding: 10px;
-      margin: 5px;
+      font-size: 16px;
+      padding: 12px 24px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #skipBtn {
+      background-color: #ff9800;
+      margin-top: 10px;
+      font-size: 13px;
     }
     #message {
       margin-top: 15px;
       font-weight: bold;
+      min-height: 24px;
+    }
+    #score {
+      color: #555;
+      font-size: 14px;
+      background: #eee;
+      padding: 8px;
+      border-radius: 20px;
+      display: inline-block;
+      margin-top: 15px;
     }
     #resetBtn {
-      position: fixed;
-      bottom: 10px;
-      left: 10px;
-      font-size: 12px;
-      padding: 8px;
-      opacity: 0.7;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 10px;
+      padding: 5px 8px;
+      background: #f0f0f0;
+      color: #888;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      opacity: 0.6;
+    }
+    #resetBtn:hover {
+      opacity: 1;
+      background: #ffebee;
+      color: #d32f2f;
     }
   </style>
 </head>
 <body>
 
 <div class="box">
+  <button id="resetBtn" onclick="resetPrompt()">Reset</button>
+
   <h2>Math Reward 💰</h2>
 
   <div class="question" id="question"></div>
 
-  <input type="number" id="answer" placeholder="Your answer">
+  <input type="number" id="answer" placeholder="?">
 
   <br>
   <button onclick="checkAnswer()">Submit</button>
 
   <br>
   <button id="skipBtn" onclick="newQuestion()" style="display:none;">
-    I don't know the answer now, but I will ask and come back to it later. Can I have a new question please?
+    Get a different question
   </button>
 
-  <h3 id="score"></h3>
+  <br>
+  <div id="score"></div>
   <p id="message"></p>
 </div>
 
-<button id="resetBtn" onclick="resetPrompt()">Reset</button>
-
 <script>
 let num1, num2, operator, correctAnswer;
-
 let questionCount = 0;
 let attempts = 0;
 let penaltyApplied = false;
 
 let score = parseFloat(localStorage.getItem("balance")) || 0;
-
 let today = new Date().toDateString();
 let savedDate = localStorage.getItem("date");
 let dailyEarned = parseFloat(localStorage.getItem("dailyEarned")) || 0;
@@ -118,9 +161,7 @@ function newQuestion() {
   attempts = 0;
   penaltyApplied = false;
   document.getElementById("skipBtn").style.display = "none";
-
   let difficulty = getDifficulty();
-
   let ops = ["+", "-", "*", "/"];
   operator = ops[Math.floor(Math.random() * ops.length)];
 
@@ -128,163 +169,121 @@ function newQuestion() {
     operator = Math.random() > 0.5 ? "+" : "-";
     num1 = getRandom(3, 10);
     num2 = getRandom(3, 10);
-
     if (operator === "-") {
       if (num2 > num1) [num1, num2] = [num2, num1];
       correctAnswer = num1 - num2;
     } else {
       correctAnswer = num1 + num2;
     }
-  }
-
+  } 
   else if (difficulty === "medium") {
     if (operator === "+" || operator === "-") {
       num1 = getRandom(10, 30);
       num2 = getRandom(10, 30);
-
       if (operator === "-") {
         if (num2 > num1) [num1, num2] = [num2, num1];
         correctAnswer = num1 - num2;
       } else {
         correctAnswer = num1 + num2;
       }
-
+    } else if (operator === "*") {
+      num1 = getRandom(2, 6);
+      num2 = getRandom(2, 6);
+      correctAnswer = num1 * num2;
     } else {
-      num1 = getRandom(1, 5);
-      num2 = getRandom(1, 5);
-      correctAnswer = operator === "*" ? num1 * num2 : null;
-    }
-
-    if (operator === "/") {
-      num2 = getRandom(1, 5);
-      correctAnswer = getRandom(1, 5);
+      num2 = getRandom(2, 5);
+      correctAnswer = getRandom(2, 5);
       num1 = num2 * correctAnswer;
     }
-  }
-
+  } 
   else {
     if (operator === "+" || operator === "-") {
       num1 = getRandom(30, 100);
       num2 = getRandom(30, 100);
-
       if (operator === "-") {
         if (num2 > num1) [num1, num2] = [num2, num1];
         correctAnswer = num1 - num2;
       } else {
         correctAnswer = num1 + num2;
       }
-
+    } else if (operator === "*") {
+      num1 = getRandom(5, 12);
+      num2 = getRandom(5, 12);
+      correctAnswer = num1 * num2;
     } else {
-      num1 = getRandom(5, 10);
-      num2 = getRandom(5, 10);
-      correctAnswer = operator === "*" ? num1 * num2 : null;
-    }
-
-    if (operator === "/") {
       num2 = getRandom(5, 10);
       correctAnswer = getRandom(5, 10);
       num1 = num2 * correctAnswer;
     }
   }
 
-  let displayOperator = operator === "*" ? "X" : operator;
-
-  document.getElementById("question").innerText =
-    num1 + " " + displayOperator + " " + num2 + " = ?";
-
+  let displayOperator = operator === "*" ? "×" : (operator === "/" ? "÷" : operator);
+  document.getElementById("question").innerText = num1 + " " + displayOperator + " " + num2;
   document.getElementById("answer").value = "";
   document.getElementById("message").innerText = "";
 }
 
 function checkAnswer() {
   let input = document.getElementById("answer").value;
-
-  if (input === "") {
-    document.getElementById("message").innerText = "Enter a number!";
-    return;
-  }
+  if (input === "") return;
 
   let userAnswer = Number(input);
   attempts++;
 
   if (userAnswer === correctAnswer) {
-
     let difficulty = getDifficulty();
     let reward = getReward(difficulty);
-
     if (dailyEarned < 3) {
       score += reward;
       dailyEarned += reward;
     }
-
-    document.getElementById("message").innerText = "Great job!";
-
+    document.getElementById("message").style.color = "green";
+    document.getElementById("message").innerText = "Great job! +$" + reward.toFixed(2);
     questionCount++;
     localStorage.setItem("dailyEarned", dailyEarned);
     updateScore();
-
-    setTimeout(newQuestion, 800);
-
+    setTimeout(newQuestion, 1200);
   } else {
-
     if (!penaltyApplied) {
-      score -= 0.03;
+      score -= 0.03; // Corrected: 3 cents penalty
       if (score < 0) score = 0;
       penaltyApplied = true;
-
-      alert("Sorry, Penalty of 30 cents!");
+      alert("Oops! Careful... a 3 cent penalty was applied.");
       updateScore();
     }
-
+    document.getElementById("message").style.color = "red";
     if (attempts >= 3) {
-      document.getElementById("message").innerText =
-        "Let's try another one later.";
+      document.getElementById("message").innerText = "Let's try another one.";
       document.getElementById("skipBtn").style.display = "inline-block";
     } else {
-      document.getElementById("message").innerText =
-        "Try again carefully!";
+      document.getElementById("message").innerText = "Try again carefully!";
     }
   }
 }
 
 function resetPrompt() {
-  let base = getRandom(10, 20);
+  let base = getRandom(11, 15);
   let correct = base * base;
-
-  let user = prompt("Grown-ups only! What is " + base + "² ?");
-
+  let user = prompt("Grown-ups only! What is " + base + " squared?");
   if (user === null) return;
 
   if (Number(user) === correct) {
-
-    let choice = prompt(
-      "Type:\n1 → Reset Daily\n2 → Reset Total\n3 → Reset BOTH"
-    );
-
+    let choice = prompt("1: Reset Today | 2: Reset Total | 3: Reset All");
     if (choice === "1") {
       dailyEarned = 0;
       localStorage.setItem("dailyEarned", 0);
-      alert("Daily reset done");
-    }
-
-    else if (choice === "2") {
+    } else if (choice === "2") {
       score = 0;
       localStorage.setItem("balance", 0);
-      alert("Total reset done");
-    }
-
-    else if (choice === "3") {
-      dailyEarned = 0;
-      score = 0;
+    } else if (choice === "3") {
+      dailyEarned = 0; score = 0;
       localStorage.setItem("dailyEarned", 0);
       localStorage.setItem("balance", 0);
-      alert("Everything reset");
     }
-
     updateScore();
-
+    alert("Reset successful.");
   } else {
-    alert("Wrong answer. Access denied.");
+    alert("Incorrect.");
   }
 }
 
