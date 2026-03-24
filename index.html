@@ -1,47 +1,62 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Token Reward Zone</title>
+  <title>Melorin's Token Zone</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background: #f0f2f5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-    .box { background: white; padding: 20px 15px; width: 95%; max-width: 440px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; height: 92vh; display: flex; flex-direction: column; overflow-y: auto; }
+    .box { background: white; padding: 15px; width: 95%; max-width: 440px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; height: 94vh; display: flex; flex-direction: column; overflow: hidden; z-index: 10; }
     
-    #score { font-size: 13px; color: #333; background: #fff9c4; padding: 8px 12px; border-radius: 15px; margin-bottom: 10px; font-weight: bold; border: 1px solid #fbc02d; }
-    #modeBtn { background: #9c27b0; font-size: 11px; padding: 6px 15px; border-radius: 15px; color: white; border: none; cursor: pointer; margin-bottom: 5px; }
+    /* Top Goal Tracking */
+    .top-stats { display: flex; justify-content: space-around; margin-bottom: 10px; }
+    .stat-pill { background: #ede7f6; color: #512da8; padding: 5px 15px; border-radius: 15px; font-size: 14px; font-weight: bold; border: 1px solid #d1c4e9; }
+    
+    #modeBtn { background: #9c27b0; font-size: 11px; padding: 6px 15px; border-radius: 15px; color: white; border: none; cursor: pointer; margin-bottom: 10px; align-self: center; }
 
-    .question { font-size: 36px; font-weight: bold; margin: 10px 0; color: #333; }
+    .question { font-size: 36px; font-weight: bold; margin: 5px 0; color: #333; }
     #mathInput { font-size: 28px; padding: 8px; width: 100px; border: 2px solid #ddd; border-radius: 10px; text-align: center; }
     
-    .letter-grid { display: flex; justify-content: center; gap: 4px; margin: 15px 0; flex-wrap: wrap; }
+    .letter-grid { display: flex; justify-content: center; gap: 4px; margin: 10px 0; flex-wrap: wrap; }
     .letter-box { width: 32px; height: 42px; font-size: 20px; text-align: center; border: 2px solid #ddd; border-radius: 5px; text-transform: lowercase; font-weight: bold; }
     .letter-box:focus { border-color: #4CAF50; outline: none; background: #f0fff0; }
-    .letter-box:disabled { background: #f4f4f4; color: #888; }
 
-    #helpArea { margin-top: auto; padding: 12px; background: #fffde7; border-radius: 12px; border: 1px dashed #fbc02d; min-height: 120px; }
-    .help-title { font-size: 12px; font-weight: bold; color: #856404; margin-bottom: 8px; text-transform: uppercase; }
+    /* Visual Help Area */
+    #helpArea { margin: 10px 0; padding: 10px; background: #fffde7; border-radius: 12px; border: 1px dashed #fbc02d; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; min-height: 100px; }
+    .help-title { font-size: 11px; font-weight: bold; color: #856404; margin-bottom: 5px; text-transform: uppercase; }
     
-    .ten-frame-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; width: fit-content; margin: 0 auto; padding: 5px; }
+    /* Dot Visuals */
+    .ten-frame-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; width: fit-content; margin: 0 auto; }
     .dot { width: 10px; height: 10px; border-radius: 50%; background: #2196F3; }
     .dot.secondary { background: #f44336; }
     .dot.dim { background: #e0e0e0; border: 1px solid #ccc; }
     
-    .grid-row { display: flex; justify-content: center; gap: 3px; margin-bottom: 3px; }
-    .division-group { border: 1px solid #ddd; padding: 5px; border-radius: 6px; display: inline-block; margin: 3px; background: white; }
+    /* Bottom Token Area */
+    .bottom-tokens { background: #fafafa; border-top: 2px solid #eee; padding: 10px; margin-top: 10px; border-radius: 0 0 20px 20px; }
+    .progress-container { width: 100%; height: 20px; background: #e0e0e0; border-radius: 10px; margin: 8px 0; overflow: hidden; border: 1px solid #ccc; }
+    #progressBar { height: 100%; width: 0%; background: linear-gradient(90deg, #ff5252, #ff1744); transition: width 0.5s ease-in-out; }
+    .token-labels { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: #444; }
 
-    button#submitBtn { font-size: 20px; padding: 15px 40px; background: #4CAF50; color: white; border: none; border-radius: 15px; cursor: pointer; font-weight: bold; margin-top: 10px; box-shadow: 0 4px 0 #388E3C; }
-    button#submitBtn:active { transform: translateY(2px); box-shadow: 0 2px 0 #388E3C; }
-    #speakBtn { background: #2196F3; border-radius: 50%; width: 55px; height: 55px; font-size: 28px; color: white; border: none; cursor: pointer; margin-bottom: 10px; }
+    button#submitBtn { font-size: 20px; padding: 12px 40px; background: #4CAF50; color: white; border: none; border-radius: 15px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 0 #388E3C; }
+    #speakBtn { background: #2196F3; border-radius: 50%; width: 50px; height: 50px; font-size: 25px; color: white; border: none; cursor: pointer; margin-bottom: 5px; }
 
-    #message { font-weight: bold; font-size: 18px; margin: 8px 0; height: 45px; white-space: pre-line; }
-    #resetBtn { position: absolute; bottom: 5px; left: 5px; font-size: 9px; opacity: 0.3; background: none; border: none; cursor: pointer; }
+    #message { font-weight: bold; font-size: 18px; margin: 5px 0; height: 30px; }
+    #resetBtn { position: absolute; top: 5px; left: 5px; font-size: 9px; opacity: 0.2; background: none; border: none; cursor: pointer; }
+
+    .confetti { position: fixed; width: 8px; height: 8px; z-index: 999; pointer-events: none; }
+    @keyframes fall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
   </style>
 </head>
 <body>
 
 <div class="box">
-  <button id="modeBtn" onclick="toggleMode()">Switch Mode</button>
-  <div id="score">Loading Tokens...</div>
+  <button id="resetBtn" onclick="resetPrompt()">Admin</button>
+  
+  <div class="top-stats">
+    <div class="stat-pill">Math: <span id="mathCount">0</span>/20</div>
+    <div class="stat-pill">Spell: <span id="spellCount">0</span>/30</div>
+  </div>
+
+  <button id="modeBtn" onclick="toggleMode()">Switch to Spelling</button>
 
   <div id="mathArea">
     <div class="question" id="mathQuestion"></div>
@@ -57,11 +72,19 @@
   <button id="submitBtn" onclick="checkAnswer()">Submit</button>
 
   <div id="helpArea">
-    <div class="help-title" id="helpTitle">Token Helper</div>
+    <div class="help-title" id="helpTitle">Helper</div>
     <div id="visualAid"></div>
   </div>
 
-  <button id="resetBtn" onclick="resetPrompt()">Admin</button>
+  <div class="bottom-tokens">
+    <div class="token-labels">
+      <span>Today: <span id="todayTokens">0</span> / 300</span>
+      <span>Total: <span id="totalTokens">0</span> 🪙</span>
+    </div>
+    <div class="progress-container">
+      <div id="progressBar"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -70,15 +93,15 @@ const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6laLcpDJNQ4Lo
 let mode = "math", spellingWords = ["apple"], currentWord = "";
 let num1, num2, operator, correctAnswer, attempts = 0, penaltyApplied = false;
 
-// Token Data
 let totalTokens = parseInt(localStorage.getItem("totalTokens")) || 0;
 let mathToday = parseInt(localStorage.getItem("mathToday")) || 0;
 let spellToday = parseInt(localStorage.getItem("spellToday")) || 0;
 let tokensToday = parseInt(localStorage.getItem("tokensToday")) || 0;
 let errorLog = JSON.parse(localStorage.getItem("errorLog")) || [];
+let savedDate = localStorage.getItem("savedDate");
 let todayDate = new Date().toDateString();
 
-if (localStorage.getItem("savedDate") !== todayDate) {
+if (savedDate !== todayDate) {
     mathToday = 0; spellToday = 0; tokensToday = 0;
     localStorage.setItem("savedDate", todayDate);
 }
@@ -94,11 +117,22 @@ function playSound(isSuccess) {
         g.gain.setValueAtTime(0.1, audioCtx.currentTime);
         osc.start(); osc.stop(audioCtx.currentTime + 0.2);
     } else {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(110, audioCtx.currentTime);
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(110, audioCtx.currentTime);
         osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.4);
         g.gain.setValueAtTime(0.15, audioCtx.currentTime);
         osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+    }
+}
+
+function createConfetti() {
+    for (let i = 0; i < 40; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.left = Math.random() * 100 + 'vw';
+        c.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        c.style.animation = `fall ${Math.random() * 2 + 1}s linear forwards`;
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 3000);
     }
 }
 
@@ -110,6 +144,7 @@ function toggleMode() {
     mode = (mode === "math") ? "spelling" : "math";
     document.getElementById("mathArea").style.display = (mode === "math") ? "block" : "none";
     document.getElementById("spellingArea").style.display = (mode === "spelling") ? "block" : "none";
+    document.getElementById("modeBtn").innerText = mode === "math" ? "Switch to Spelling" : "Switch to Math";
     nextTask();
 }
 
@@ -117,7 +152,6 @@ function nextTask() {
     attempts = 0; penaltyApplied = false;
     document.getElementById("message").innerText = "";
     document.getElementById("visualAid").innerHTML = "";
-    document.getElementById("helpTitle").innerText = "Token Helper";
     if (mode === "math") generateMath(); else generateSpelling();
     updateScore();
 }
@@ -149,8 +183,7 @@ function generateSpelling() {
     for (let i = 0; i < currentWord.length; i++) {
         const b = document.createElement("input");
         b.className = "letter-box"; b.maxLength = 1;
-        if (i === 0) { b.value = currentWord[0]; b.disabled = true; }
-        else if (i === currentWord.length - 1) { b.value = currentWord[i]; b.disabled = true; }
+        if (i === 0 || i === currentWord.length - 1) { b.value = currentWord[i]; b.disabled = true; }
         else { b.oninput = (e) => { if (e.target.value && i < currentWord.length - 2) grid.children[i+1].focus(); }; }
         grid.appendChild(b);
     }
@@ -174,14 +207,10 @@ function renderTenFrame(n, type, container) {
 }
 
 function showHelp() {
-    const aid = document.getElementById("visualAid");
-    aid.innerHTML = "";
+    const aid = document.getElementById("visualAid"); aid.innerHTML = "";
     if (mode === "math") {
-        if (operator === "+") {
-            renderTenFrame(num1, "primary", aid);
-            aid.innerHTML += "<div style='margin:2px'>+</div>";
-            renderTenFrame(num2, "secondary", aid);
-        } else if (operator === "-") {
+        if (operator === "+") { renderTenFrame(num1, "primary", aid); aid.innerHTML += "+"; renderTenFrame(num2, "secondary", aid); }
+        else if (operator === "-") {
             const grid = document.createElement("div"); grid.className = "ten-frame-grid";
             for(let i=0; i<num1; i++) {
                 const d = document.createElement("div"); d.className = (i < num2) ? "dot dim" : "dot primary";
@@ -191,37 +220,25 @@ function showHelp() {
         } else if (operator === "*") {
             for(let r=0; r<num1; r++) {
                 const row = document.createElement("div"); row.className = "grid-row";
-                for(let c=0; c<num2; c++) {
-                    const d = document.createElement("div"); d.className = "dot primary"; row.appendChild(d);
-                }
+                for(let c=0; c<num2; c++) { const d = document.createElement("div"); d.className = "dot primary"; row.appendChild(d); }
                 aid.appendChild(row);
             }
         } else if (operator === "/") {
             for(let g=0; g<num2; g++) {
                 const grp = document.createElement("div"); grp.className = "division-group";
-                for(let i=0; i<correctAnswer; i++) {
-                    const d = document.createElement("div"); d.className = "dot primary"; grp.appendChild(d);
-                }
+                for(let i=0; i<correctAnswer; i++) { const d = document.createElement("div"); d.className = "dot primary"; grp.appendChild(d); }
                 aid.appendChild(grp);
             }
         }
     } else {
-        // Spelling Help Logic
-        if (attempts === 1) {
-            document.getElementById("helpTitle").innerText = "First chance! Listen again.";
-            sayWord();
-        } else if (attempts === 2) {
-            document.getElementById("helpTitle").innerText = "Hint: One more letter!";
-            let middleIdx = Math.floor(Math.random() * (currentWord.length - 2)) + 1;
-            let hintWord = currentWord[0];
-            for(let i=1; i < currentWord.length -1; i++) {
-                hintWord += (i === middleIdx) ? ` ${currentWord[i]} ` : " _ ";
-            }
-            hintWord += currentWord[currentWord.length - 1];
-            aid.innerHTML = `<p style='font-size:22px; color:#2196F3; letter-spacing:3px; font-weight:bold;'>${hintWord.toUpperCase()}</p>`;
-        } else {
-            document.getElementById("helpTitle").innerText = "Look at the word:";
-            aid.innerHTML = `<p style='font-size:24px; color:#4CAF50; letter-spacing:4px; font-weight:bold;'>${currentWord.toUpperCase()}</p>`;
+        if (attempts === 2) {
+            let mid = Math.floor(Math.random() * (currentWord.length - 2)) + 1;
+            let h = currentWord[0];
+            for(let i=1; i<currentWord.length-1; i++) h += (i===mid) ? ` ${currentWord[i]} ` : " _ ";
+            h += currentWord[currentWord.length-1];
+            aid.innerHTML = `<p style='font-size:20px; color:#2196F3; letter-spacing:2px; font-weight:bold;'>${h.toUpperCase()}</p>`;
+        } else if (attempts >= 3) {
+            aid.innerHTML = `<p style='font-size:22px; color:#4CAF50; letter-spacing:3px; font-weight:bold;'>${currentWord.toUpperCase()}</p>`;
         }
     }
 }
@@ -236,6 +253,7 @@ function checkAnswer() {
 
     if (correct) {
         playSound(true);
+        createConfetti();
         let reward = 0;
         if (tokensToday < 300) {
             if (mode === "math" && mathToday < 20) { reward = 10; mathToday++; }
@@ -243,7 +261,7 @@ function checkAnswer() {
         }
         totalTokens += reward; tokensToday += reward;
         document.getElementById("message").style.color = "green";
-        document.getElementById("message").innerText = reward > 0 ? `+${reward} Tokens! 🪙` : "Correct! (Daily Limit)";
+        document.getElementById("message").innerText = "Bravo Melorin! 🌟";
         setTimeout(nextTask, 1500);
     } else {
         attempts++;
@@ -252,14 +270,14 @@ function checkAnswer() {
             totalTokens = Math.max(0, totalTokens - 3);
             tokensToday = Math.max(0, tokensToday - 3);
             penaltyApplied = true;
-            errorLog.push(`${new Date().toLocaleTimeString()}: ${mode === "math" ? mathQuestion.innerText : currentWord} (Used: ${userVal})`);
+            errorLog.push(`${new Date().toLocaleTimeString()}: ${mode === "math" ? mathQuestion.innerText : currentWord} (${userVal})`);
             localStorage.setItem("errorLog", JSON.stringify(errorLog.slice(-20)));
             document.getElementById("message").style.color = "red";
             document.getElementById("message").innerText = "-3 Tokens Penalty 💨";
         }
         showHelp();
         if (attempts >= 4) {
-            document.getElementById("message").innerText = "Moving to next question...";
+            document.getElementById("message").innerText = "Next question coming...";
             setTimeout(nextTask, 3000);
         }
     }
@@ -267,7 +285,14 @@ function checkAnswer() {
 }
 
 function updateScore() {
-    document.getElementById("score").innerHTML = `Tokens: ${totalTokens} 🪙<br>Today: ${tokensToday}/300 | Math ${mathToday}/20 | Spell ${spellToday}/30`;
+    document.getElementById("mathCount").innerText = mathToday;
+    document.getElementById("spellCount").innerText = spellToday;
+    document.getElementById("todayTokens").innerText = tokensToday;
+    document.getElementById("totalTokens").innerText = totalTokens;
+    
+    let progress = (tokensToday / 300) * 100;
+    document.getElementById("progressBar").style.width = Math.min(progress, 100) + "%";
+    
     localStorage.setItem("totalTokens", totalTokens);
     localStorage.setItem("mathToday", mathToday);
     localStorage.setItem("spellToday", spellToday);
@@ -276,11 +301,11 @@ function updateScore() {
 
 function resetPrompt() {
     let b = Math.floor(Math.random()*4)+11;
-    if (prompt(`Parent Check: ${b}x${b}?`) == b*b) {
-        let c = prompt("1: Reset Today\n2: Reset Total\n3: View Errors");
+    if (prompt(`Admin: ${b}x${b}?`) == b*b) {
+        let c = prompt("1: Reset Today\n2: Reset Total Balance\n3: Errors");
         if (c=="1") { mathToday = 0; spellToday = 0; tokensToday = 0; }
         else if (c=="2") { totalTokens = 0; mathToday = 0; spellToday = 0; tokensToday = 0; }
-        else if (c=="3") { alert(errorLog.join("\n") || "No errors!"); }
+        else if (c=="3") alert(errorLog.join("\n") || "No errors!");
         updateScore();
     }
 }
