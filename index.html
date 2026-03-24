@@ -1,44 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Reward Zone 2.0</title>
+  <title>Reward Zone 3.0</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background: #f0f2f5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-    .box { background: white; padding: 25px 15px; width: 95%; max-width: 420px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; min-height: 500px; display: flex; flex-direction: column; }
+    .box { background: white; padding: 20px 15px; width: 95%; max-width: 440px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; height: 90vh; display: flex; flex-direction: column; overflow-y: auto; }
     
-    /* Math Display */
-    .question { font-size: 40px; font-weight: bold; margin: 15px 0; color: #333; }
+    /* Header & Stats */
+    #score { font-size: 11px; color: #666; background: #eee; padding: 5px 10px; border-radius: 15px; margin-bottom: 10px; font-weight: bold; }
+    #modeBtn { background: #9c27b0; font-size: 11px; padding: 5px 12px; border-radius: 15px; color: white; border: none; cursor: pointer; margin-bottom: 5px; }
+
+    /* Math & Spelling Display */
+    .question { font-size: 36px; font-weight: bold; margin: 10px 0; color: #333; }
+    #mathInput { font-size: 28px; padding: 8px; width: 100px; border: 2px solid #ddd; border-radius: 10px; text-align: center; }
     
-    /* Spelling Grid */
-    .letter-grid { display: flex; justify-content: center; gap: 5px; margin: 20px 0; flex-wrap: wrap; }
-    .letter-box { width: 35px; height: 45px; font-size: 24px; text-align: center; border: 2px solid #ddd; border-radius: 5px; text-transform: lowercase; font-weight: bold; }
-    .letter-box:disabled { background: #f9f9f9; color: #555; border-color: #bbb; }
+    .letter-grid { display: flex; justify-content: center; gap: 4px; margin: 15px 0; flex-wrap: wrap; }
+    .letter-box { width: 30px; height: 40px; font-size: 20px; text-align: center; border: 2px solid #ddd; border-radius: 5px; text-transform: lowercase; font-weight: bold; }
     .letter-box:focus { border-color: #4CAF50; outline: none; background: #f0fff0; }
+    .letter-box:disabled { background: #f4f4f4; color: #888; }
 
-    /* Inputs & Buttons */
-    #mathInput { font-size: 28px; padding: 10px; width: 120px; border: 2px solid #ddd; border-radius: 10px; text-align: center; }
-    button { font-size: 18px; padding: 12px 25px; background: #4CAF50; color: white; border: none; border-radius: 10px; cursor: pointer; margin: 10px; font-weight: bold; }
-    #modeBtn { background: #9c27b0; font-size: 12px; padding: 5px 10px; align-self: center; }
-    #speakBtn { background: #2196F3; border-radius: 50%; width: 60px; height: 60px; font-size: 30px; line-height: 60px; padding: 0; }
+    /* Visual Help Area (The Manipulatives) */
+    #helpArea { margin-top: 15px; padding: 10px; background: #fffde7; border-radius: 12px; border: 1px dashed #fbc02d; min-height: 100px; }
+    .help-title { font-size: 12px; font-weight: bold; color: #856404; margin-bottom: 8px; text-transform: uppercase; }
+    
+    /* Dot Styles */
+    .dot-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; max-width: 120px; margin: 0 auto; line-height: 0; }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #2196F3; }
+    .dot.secondary { background: #f44336; }
+    .dot.dim { background: #e0e0e0; border: 1px solid #ccc; }
+    
+    /* Layout for Multi/Div */
+    .grid-row { display: flex; justify-content: center; gap: 2px; margin-bottom: 2px; }
+    .division-group { border: 1px solid #ddd; padding: 4px; border-radius: 4px; display: inline-block; margin: 2px; background: white; }
 
-    /* Visual Help Area */
-    #helpArea { margin-top: auto; padding: 10px; background: #fffde7; border-radius: 10px; border: 1px dashed #fbc02d; min-height: 60px; font-size: 14px; }
-    .dot { display: inline-block; width: 8px; height: 8px; background: #fbc02d; border-radius: 50%; margin: 2px; }
-    .dot-group { display: inline-block; margin: 0 5px; vertical-align: middle; }
+    button#submitBtn { font-size: 18px; padding: 12px 30px; background: #4CAF50; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+    #speakBtn { background: #2196F3; border-radius: 50%; width: 50px; height: 50px; font-size: 25px; color: white; border: none; cursor: pointer; }
 
-    #message { font-weight: bold; font-size: 18px; margin: 10px 0; min-height: 25px; }
-    #score { font-size: 12px; color: #666; background: #eee; padding: 5px 10px; border-radius: 15px; margin-top: 5px; }
-    #resetBtn { position: absolute; bottom: 5px; left: 5px; font-size: 9px; opacity: 0.5; }
+    #message { font-weight: bold; font-size: 16px; margin: 8px 0; height: 40px; }
+    #resetBtn { position: absolute; bottom: 5px; left: 5px; font-size: 9px; opacity: 0.4; background: none; border: none; cursor: pointer; }
   </style>
 </head>
 <body>
 
 <div class="box">
-  <button id="modeBtn" onclick="toggleMode()">Switch Mode</button>
-  <h3 style="margin:0">Reward Zone 💰</h3>
-  
-  <div id="score"></div>
+  <button id="modeBtn" onclick="toggleMode()">Switch to Spelling</button>
+  <div id="score">Loading...</div>
 
   <div id="mathArea">
     <div class="question" id="mathQuestion"></div>
@@ -46,19 +53,20 @@
   </div>
 
   <div id="spellingArea" style="display:none;">
+    <div class="question" style="font-size: 14px; color: #666;">Listen & Spell:</div>
     <button id="speakBtn" onclick="sayWord()">🔊</button>
     <div class="letter-grid" id="letterGrid"></div>
   </div>
 
   <p id="message"></p>
-  <button id="submitBtn" onclick="checkAnswer()">Submit Answer</button>
+  <button id="submitBtn" onclick="checkAnswer()">Submit</button>
 
-  <div id="helpArea" id="helpArea">
-    <div id="helpText">Try your best!</div>
+  <div id="helpArea">
+    <div class="help-title" id="helpTitle">Visual Helper</div>
     <div id="visualAid"></div>
   </div>
 
-  <button id="resetBtn" onclick="resetPrompt()">Reset</button>
+  <button id="resetBtn" onclick="resetPrompt()">Admin Reset</button>
 </div>
 
 <script>
@@ -70,176 +78,203 @@ let score = parseFloat(localStorage.getItem("balance")) || 0;
 let dailyMath = parseInt(localStorage.getItem("mathToday")) || 0;
 let dailySpell = parseInt(localStorage.getItem("spellToday")) || 0;
 
-// Audio Setup
+// Audio
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playSound(type) {
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  
-  if (type === 'success') {
-    osc.type = 'sine'; osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-    osc.start(); osc.stop(audioCtx.currentTime + 0.3);
-  } else {
-    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, audioCtx.currentTime);
-    osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.4);
-    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-    osc.start(); osc.stop(audioCtx.currentTime + 0.4);
-  }
+function playSound(isSuccess) {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.connect(g); g.connect(audioCtx.destination);
+    if (isSuccess) {
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+    } else {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(60, audioCtx.currentTime + 0.4);
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+    }
 }
 
-// Load Words
+// Fetch Words
 fetch(CSV_URL).then(r => r.text()).then(d => {
-  spellingWords = d.split(/\r?\n/).map(w => w.trim().toLowerCase()).filter(w => w.length > 1);
+    spellingWords = d.split(/\r?\n/).map(w => w.trim().toLowerCase()).filter(w => w.length > 1);
 });
 
 function toggleMode() {
-  mode = (mode === "math") ? "spelling" : "math";
-  document.getElementById("mathArea").style.display = (mode === "math") ? "block" : "none";
-  document.getElementById("spellingArea").style.display = (mode === "spelling") ? "block" : "none";
-  nextTask();
+    mode = (mode === "math") ? "spelling" : "math";
+    document.getElementById("modeBtn").innerText = mode === "math" ? "Switch to Spelling" : "Switch to Math";
+    document.getElementById("mathArea").style.display = (mode === "math") ? "block" : "none";
+    document.getElementById("spellingArea").style.display = (mode === "spelling") ? "block" : "none";
+    nextTask();
 }
 
 function nextTask() {
-  attempts = 0; penaltyApplied = false;
-  document.getElementById("message").innerText = "";
-  document.getElementById("visualAid").innerHTML = "";
-  document.getElementById("helpText").innerText = "You can do it!";
-  
-  if (mode === "math") generateMath();
-  else generateSpelling();
-  updateScore();
+    attempts = 0; penaltyApplied = false;
+    document.getElementById("message").innerText = "";
+    document.getElementById("visualAid").innerHTML = "";
+    document.getElementById("helpTitle").innerText = "Visual Helper";
+    if (mode === "math") generateMath();
+    else generateSpelling();
+    updateScore();
 }
 
 function generateMath() {
-  operator = Math.random() > 0.5 ? "+" : "-";
-  num1 = Math.floor(Math.random() * 11) + 10;
-  num2 = Math.floor(Math.random() * 9) + 2;
-  if (operator === "-" && num2 > num1) [num1, num2] = [num2, num1];
-  correctAnswer = (operator === "+") ? num1 + num2 : num1 - num2;
-  document.getElementById("mathQuestion").innerText = `${num1} ${operator} ${num2}`;
-  document.getElementById("mathInput").value = "";
-  document.getElementById("mathInput").focus();
+    const ops = ["+", "-", "*", "/"];
+    operator = ops[Math.floor(Math.random() * ops.length)];
+    
+    if (operator === "+" || operator === "-") {
+        num1 = Math.floor(Math.random() * 21) + 10; // 10-30
+        num2 = Math.floor(Math.random() * 15) + 5;  // 5-20
+        if (operator === "-" && num2 > num1) [num1, num2] = [num2, num1];
+        correctAnswer = (operator === "+") ? num1 + num2 : num1 - num2;
+    } else if (operator === "*") {
+        num1 = Math.floor(Math.random() * 8) + 2;
+        num2 = Math.floor(Math.random() * 8) + 2;
+        correctAnswer = num1 * num2;
+    } else {
+        num2 = Math.floor(Math.random() * 5) + 2;
+        correctAnswer = Math.floor(Math.random() * 6) + 2;
+        num1 = num2 * correctAnswer;
+    }
+    
+    document.getElementById("mathQuestion").innerText = `${num1} ${operator === '*' ? '×' : (operator === '/' ? '÷' : operator)} ${num2}`;
+    document.getElementById("mathInput").value = "";
+    document.getElementById("mathInput").focus();
 }
 
 function generateSpelling() {
-  currentWord = spellingWords[Math.floor(Math.random() * spellingWords.length)];
-  const grid = document.getElementById("letterGrid");
-  grid.innerHTML = "";
-  
-  for (let i = 0; i < currentWord.length; i++) {
-    const input = document.createElement("input");
-    input.className = "letter-box";
-    input.maxLength = 1;
-    input.dataset.index = i;
-    
-    // Fill first and last
-    if (i === 0) { input.value = currentWord[0]; input.disabled = true; }
-    else if (i === currentWord.length - 1) { input.value = currentWord[i]; input.disabled = true; }
-    
-    input.oninput = (e) => {
-      if (e.target.value && i < currentWord.length - 2) {
-        grid.children[i + 1].focus();
-      }
-    };
-    grid.appendChild(input);
-  }
-  setTimeout(() => grid.children[1].focus(), 500);
-  sayWord();
+    currentWord = spellingWords[Math.floor(Math.random() * spellingWords.length)];
+    const grid = document.getElementById("letterGrid");
+    grid.innerHTML = "";
+    for (let i = 0; i < currentWord.length; i++) {
+        const b = document.createElement("input");
+        b.className = "letter-box"; b.maxLength = 1;
+        if (i === 0) { b.value = currentWord[0]; b.disabled = true; }
+        else if (i === currentWord.length - 1) { b.value = currentWord[i]; b.disabled = true; }
+        b.oninput = (e) => { if (e.target.value && i < currentWord.length - 2) grid.children[i+1].focus(); };
+        grid.appendChild(b);
+    }
+    setTimeout(() => { grid.children[1].focus(); sayWord(); }, 400);
 }
 
 function sayWord() {
-  window.speechSynthesis.cancel();
-  let m = new SpeechSynthesisUtterance(currentWord);
-  m.rate = 0.7; window.speechSynthesis.speak(m);
+    window.speechSynthesis.cancel();
+    let m = new SpeechSynthesisUtterance(currentWord);
+    m.rate = 0.7; window.speechSynthesis.speak(m);
 }
 
-function showMathHelp() {
-  const aid = document.getElementById("visualAid");
-  aid.innerHTML = "";
-  document.getElementById("helpText").innerText = "Count the dots:";
-  
-  function createDots(n, color) {
-    const span = document.createElement("div");
-    span.className = "dot-group";
+function renderDots(n, type = "primary", container) {
+    const wrap = document.createElement("div");
+    wrap.className = "dot-container";
     for(let i=0; i<n; i++) {
-      const d = document.createElement("div");
-      d.className = "dot";
-      if(color) d.style.background = color;
-      span.appendChild(d);
+        const d = document.createElement("div");
+        d.className = `dot ${type}`;
+        wrap.appendChild(d);
     }
-    return span;
-  }
-  aid.appendChild(createDots(num1, "#2196F3"));
-  const op = document.createElement("span");
-  op.innerText = operator;
-  op.style.fontSize = "20px";
-  aid.appendChild(op);
-  aid.appendChild(createDots(num2, "#f44336"));
+    container.appendChild(wrap);
+}
+
+function showHelp() {
+    const aid = document.getElementById("visualAid");
+    aid.innerHTML = "";
+    
+    if (mode === "math") {
+        if (operator === "+") {
+            document.getElementById("helpTitle").innerText = `Adding ${num1} and ${num2}:`;
+            renderDots(num1, "primary", aid);
+            aid.innerHTML += "<div style='font-size:20px; margin:5px'>+</div>";
+            renderDots(num2, "secondary", aid);
+        } else if (operator === "-") {
+            document.getElementById("helpTitle").innerText = `Take ${num2} away from ${num1}:`;
+            const wrap = document.createElement("div");
+            wrap.className = "dot-container";
+            for(let i=0; i<num1; i++) {
+                const d = document.createElement("div");
+                d.className = (i < num2) ? "dot dim" : "dot primary";
+                wrap.appendChild(d);
+            }
+            aid.appendChild(wrap);
+            aid.innerHTML += `<p style='font-size:12px'>The grey dots are GONE. Count the blue ones!</p>`;
+        } else if (operator === "*") {
+            document.getElementById("helpTitle").innerText = `${num1} groups of ${num2}:`;
+            for(let r=0; r<num1; r++) {
+                const row = document.createElement("div");
+                row.className = "grid-row";
+                for(let c=0; c<num2; c++) {
+                    const d = document.createElement("div"); d.className = "dot primary";
+                    row.appendChild(d);
+                }
+                aid.appendChild(row);
+            }
+        } else if (operator === "/") {
+            document.getElementById("helpTitle").innerText = `Split ${num1} into ${num2} groups:`;
+            for(let g=0; g<num2; g++) {
+                const group = document.createElement("div");
+                group.className = "division-group";
+                for(let i=0; i<correctAnswer; i++) {
+                    const d = document.createElement("div"); d.className = "dot primary"; d.style.margin="1px";
+                    group.appendChild(d);
+                }
+                aid.appendChild(group);
+            }
+        }
+    } else {
+        document.getElementById("helpTitle").innerText = "Spelling Tip:";
+        aid.innerHTML = `<p style='font-size:20px; color:#2196F3; letter-spacing:2px'>${currentWord}</p>`;
+    }
 }
 
 function checkAnswer() {
-  let userAns = "";
-  if (mode === "math") {
-    userAns = document.getElementById("mathInput").value;
-  } else {
-    const boxes = document.querySelectorAll(".letter-box");
-    boxes.forEach(b => userAns += b.value);
-  }
+    let userVal = "";
+    if (mode === "math") userVal = document.getElementById("mathInput").value;
+    else document.querySelectorAll(".letter-box").forEach(b => userVal += b.value);
 
-  if (!userAns) return;
+    if (!userVal) return;
+    const correct = (mode === "math") ? (parseInt(userVal) === correctAnswer) : (userVal.toLowerCase() === currentWord);
 
-  const isCorrect = (mode === "math") ? (parseInt(userAns) === correctAnswer) : (userAns.toLowerCase() === currentWord);
-
-  if (isCorrect) {
-    playSound('success');
-    let reward = 0;
-    if (mode === "math" && dailyMath < 20) { reward = 0.10; dailyMath++; }
-    if (mode === "spelling" && dailySpell < 10) { reward = 0.15; dailySpell++; }
-    score += reward;
-    document.getElementById("message").style.color = "green";
-    document.getElementById("message").innerText = "Excellent! +$" + reward.toFixed(2);
-    setTimeout(nextTask, 1500);
-  } else {
-    attempts++;
-    playSound('error');
-    if (!penaltyApplied) {
-      score = Math.max(0, score - 0.03);
-      penaltyApplied = true;
-      document.getElementById("message").innerText = "Oops! -3¢ Penalty";
-    }
-    
-    if (mode === "math") showMathHelp();
-
-    if (attempts >= 3) {
-      document.getElementById("message").innerText = "The answer was: " + (mode === "math" ? correctAnswer : currentWord);
-      setTimeout(nextTask, 3000);
+    if (correct) {
+        playSound(true);
+        let r = 0;
+        if (mode === "math" && dailyMath < 20) { r = 0.10; dailyMath++; }
+        if (mode === "spelling" && dailySpell < 10) { r = 0.15; dailySpell++; }
+        score += r;
+        document.getElementById("message").style.color = "green";
+        document.getElementById("message").innerText = r > 0 ? `Correct! +$${r.toFixed(2)}` : "Correct! (Limit reached)";
+        setTimeout(nextTask, 1500);
     } else {
-      document.getElementById("message").style.color = "red";
-      document.getElementById("message").innerText = "Try again!";
+        attempts++;
+        playSound(false);
+        if (!penaltyApplied) {
+            score = Math.max(0, score - 0.03);
+            penaltyApplied = true;
+            document.getElementById("message").style.color = "red";
+            document.getElementById("message").innerText = "Oops! -3¢ Penalty";
+        }
+        showHelp();
+        if (attempts >= 3) {
+            document.getElementById("message").innerText = "The answer was: " + (mode === "math" ? correctAnswer : currentWord);
+            setTimeout(nextTask, 3000);
+        }
     }
-  }
-  updateScore();
+    updateScore();
 }
 
 function updateScore() {
-  document.getElementById("score").innerHTML = `Balance: $${score.toFixed(2)} | Math: ${dailyMath}/20 | Spell: ${dailySpell}/10`;
-  localStorage.setItem("balance", score.toFixed(2));
-  localStorage.setItem("mathToday", dailyMath);
-  localStorage.setItem("spellToday", dailySpell);
+    document.getElementById("score").innerHTML = `Balance: $${score.toFixed(2)} | Math: ${dailyMath}/20 | Spell: ${dailySpell}/10`;
+    localStorage.setItem("balance", score.toFixed(2));
+    localStorage.setItem("mathToday", dailyMath);
+    localStorage.setItem("spellToday", dailySpell);
 }
 
 function resetPrompt() {
-  let b = Math.floor(Math.random()*5)+11;
-  if(prompt(`Parent check: ${b}x${b}?`) == b*b) {
-    score = 0; dailyMath = 0; dailySpell = 0;
-    updateScore(); nextTask();
-  }
+    let b = Math.floor(Math.random()*4)+11;
+    if (prompt(`Parent Check: ${b}x${b}?`) == b*b) {
+        score = 0; dailyMath = 0; dailySpell = 0;
+        updateScore(); nextTask();
+    }
 }
 
 nextTask();
